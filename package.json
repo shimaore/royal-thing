@@ -1,0 +1,27 @@
+{
+  "name": "royal-thing",
+  "version": "1.0.0",
+  "description": "A process that restarts the local registrant when needed",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/shimaore/royal-thing"
+  },
+  "keywords": [
+    "CCNQ",
+    "registrant"
+  ],
+  "author": "Stéphane Alnet <stephane@shimaore.net> (http://stephane.shimaore.net/)",
+  "license": "Unlicense",
+  "bugs": {
+    "url": "https://github.com/shimaore/royal-thing/issues"
+  },
+  "homepage": "https://github.com/shimaore/royal-thing",
+  "devDependencies": {
+    "coffee-script": "^1.8.0"
+  }
+  "private": true
+}
