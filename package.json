@@ -26,5 +26,9 @@
     "coffee-script": "^1.8.0",
     "mocha": "^2.1.0"
   },
-  "private": true
+  "private": true,
+  "dependencies": {
+    "bluebird": "^2.6.2",
+    "winston": "^0.8.3"
+  }
 }
