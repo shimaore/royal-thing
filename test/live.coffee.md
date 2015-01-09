@@ -149,3 +149,12 @@ Write a new config.json file for the tests.
           .then (doc) ->
             doc._deleted = true
             db.put doc
+
+      it 'should write a proper config file', ->
+        fs.readFileAsync '../config.json'
+        .then (buf) ->
+          data = JSON.parse buf
+          data.should.have.property 'provisioning', config.provisioning
+          data.should.have.property 'provisioning_admin', config.provisioning_admin
+          data.should.have.property 'host', config.host
+          data.should.have.property 'update_seq'
