@@ -24,12 +24,20 @@ Restarting the process & saving the update sequence
 Only restart at intervals, not on every change.
 
         interval = setInterval ->
+          try
+            do on_interval
+          catch error
+            logger.error "#{pkg.name}: error: #{error}"
 
+        on_interval = ->
           if restart_needed
+            logger.info "#{pkg.name}: calling `restart`."
             restart cancel
             .then ->
               restart_needed = false
               save_new_seq()
+            .then ->
+              logger.info "#{pkg.name}: restart completed."
           else
             save_new_seq()
 
