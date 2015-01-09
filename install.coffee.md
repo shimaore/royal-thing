@@ -10,7 +10,7 @@ On first run (no `update_seq` in configuration) retrieve the last `update_seq` a
 
       save = (seq) ->
         config.update_seq = seq
-        fs.writeFileAsync path.join (path.dirname __filename__), './config.json'
+        fs.writeFileAsync path.join (path.dirname module.filename), './config.json'
 
       db.info()
       .then (info) ->
@@ -22,7 +22,7 @@ On first run (no `update_seq` in configuration) retrieve the last `update_seq` a
         _id:design_doc
       .then (doc) ->
         doc.filters =
-          global_numbers: ({_id}) ->
+          global_numbers: fun ({_id}) ->
             _id.match /^number:\d+$/
         db.put doc
       .then ->
@@ -32,3 +32,6 @@ On first run (no `update_seq` in configuration) retrieve the last `update_seq` a
     Promise = require 'bluebird'
     fs = Promise.promisifyAll require 'fs'
     pkg = require './package.json'
+    PouchDB = require 'pouchdb'
+
+    fun = (f) -> "(#{f})"

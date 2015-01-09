@@ -13,11 +13,14 @@ First let's define what we mean by "when needed". We mean that changes were brou
 However since calls can't be placed if the `account` field is empty, we don't need to be alerted of changes in that case. Also, obviously the changes only apply to a host that is listed as the `registrant_host`.
 
     needed = (local_host,old_doc,new_doc) ->
+      assert local_host?, "#{pkg.name}: needed: missing localhost"
+      assert old_doc?, "#{pkg.name}: needed: missing old_doc"
+      assert new_doc?, "#{pkg.name}: needed: missing new_doc"
       changed = false
 
       value = (doc,name) ->
         return null unless doc.account?
-        host = doc.registrant_host.split(':')[0]
+        host = doc.registrant_host?.split(':')[0]
         return null unless host is local_host
         doc[name] ? null
 
@@ -30,3 +33,5 @@ However since calls can't be placed if the `account` field is empty, we don't ne
       changed
 
     module.exports = needed
+    assert = require 'assert'
+    pkg = require './package.json'

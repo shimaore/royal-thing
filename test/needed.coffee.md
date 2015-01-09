@@ -4,6 +4,8 @@ Test!
 
     describe 'Needed', ->
       needed = require '../needed'
+      it 'should not break if no host is present', ->
+        assert not needed 'a', {}, {}
       it 'should not report a host mismatch', ->
         assert not needed 'a', {account:1, registrant_host:'b'}, {account:1,registrant_host:'c'}
       it 'should not report a host match without data', ->
