@@ -11,10 +11,10 @@ The plan
     current_dir = path.dirname __filename
     process.chdir current_dir
     exec = (cmd,fail_if_stderr = false) ->
-      logger.info cmd
+      # logger.info cmd
       _exec cmd
       .then ([stdout,stderr]) ->
-        logger.info 'Command returned', {cmd,stdout,stderr}
+        # logger.info 'Command returned', {cmd,stdout,stderr}
         throw new Error stderr if stderr and fail_if_stderr
       .catch (error) ->
         logger.error "#{cmd} failed: #{error}"
