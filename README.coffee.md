@@ -57,17 +57,8 @@ Monitoring changes
           live: true
           filter: "#{pkg.name}/global_numbers"
 
-There are various cases where a restart might be needed. The most common ones are defined in the `needed` module. Here we deal with cases were records might not be available, etc.
-
         .on 'change', ({id,seq,doc}) ->
           new_doc = doc
-
-First if the record was deleted then obviously it was modified and we should restart.
-
-          if not new_doc? or new_doc._deleted
-            restart_needed = true
-            new_seq = seq
-            return
 
 We need to provide `needed` with both the previous record and the current record. Let's try to retrieve the previous record by querying for `revs_info`.
 
@@ -82,22 +73,21 @@ If we can't access the current record for whatever reason, simply re-use the doc
           .then (doc) ->
             old_rev = doc._revs_info?[1]?.rev
 
-If no previous version is listed (this could be the case if the document was just created, typically) then it was obviously modified and we need to restart.
+Finally, retrieve the previous revision of the document,
 
-            if not old_rev?
-              restart_needed = true
-              new_seq = seq
-              return
+            if old_rev?
+              db.get id, rev: old_rev
+            else
+              {}
 
-Finally, retrieve the previous revision of the document, then use `needed` to decide whether it was modified in a way that requires a restart.
+then use `needed` to decide whether it was modified in a way that requires a restart.
 
-            db.get id, rev: old_rev
-            .then (old_doc) ->
-              restart_needed = needed config.host, old_doc, new_doc
-              new_seq = seq
-            .catch (error) ->
-              logger.error "#{pkg.name} failed to gather data about #{new_doc._id}: #{error}"
-              throw error
+          .then (old_doc) ->
+            restart_needed = needed config.host, old_doc, new_doc
+            new_seq = seq
+          .catch (error) ->
+            logger.error "#{pkg.name} failed to gather data about #{new_doc._id}: #{error}"
+            throw error
 
 Return both our instance of the database and a way to cancel the process.
 
