@@ -110,6 +110,21 @@ Write a new config.json file for the tests.
             doc.registrant_password = 'boo'
             db.put doc
 
+      it 'should report on put with not changes preceded by changes', (done) ->
+        @timeout 5*seconds
+        restarted = false
+        run restart done
+        .then ({db,cancel}) ->
+          db.get 'number:33987654321'
+          .then (doc) ->
+            doc.registrant_password = 'bar'
+            db.put doc
+          .then ->
+            db.get 'number:33987654321'
+          .then (doc) ->
+            doc.registrant_password = 'boo'
+            db.put doc
+
       it 'should report on deletion', (done) ->
         @timeout 5*seconds
         run restart done

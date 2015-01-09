@@ -88,7 +88,9 @@ If none is specified, assumes that the document was just created (it's normal th
 then use `needed` to decide whether it was modified in a way that requires a restart.
 
           .then (old_doc) ->
-            restart_needed = needed config.host, old_doc, new_doc
+            if needed config.host, old_doc, new_doc
+              restart_needed = true
+              logger.info "#{pkg.name}: triggering restart because of #{id}"
             new_seq = seq
           .catch (error) ->
             logger.error "#{pkg.name} failed to gather data about #{new_doc._id}: #{error}"
