@@ -24,6 +24,7 @@
     "chai": "^1.10.0",
     "chai-as-promised": "^4.1.1",
     "coffee-script": "^1.8.0",
+    "exec-as-promised": "^1.0.1",
     "mocha": "^2.1.0",
     "superagent-as-promised": "^2.0.0"
   },

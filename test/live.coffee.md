@@ -6,19 +6,9 @@ The plan
     chai.use require 'chai-as-promised'
 
     Promise = require 'bluebird'
-    _exec = Promise.promisify (require 'child_process').exec
     path = require 'path'
     current_dir = path.dirname __filename
     process.chdir current_dir
-    exec = (cmd,fail_if_stderr = false) ->
-      # logger.info cmd
-      _exec cmd
-      .then ([stdout,stderr]) ->
-        # logger.info 'Command returned', {cmd,stdout,stderr}
-        throw new Error stderr if stderr and fail_if_stderr
-      .catch (error) ->
-        logger.error "#{cmd} failed: #{error}"
-        throw error
     pkg = require '../package.json'
     seconds = 1000
 
@@ -27,6 +17,7 @@ The plan
     logger = require 'winston'
     logger.remove logger.transports.Console
     logger.add logger.transports.Console, timestamp:on
+    exec = (require 'exec-as-promised') logger
 
     describe 'Live test', ->
       docker =
