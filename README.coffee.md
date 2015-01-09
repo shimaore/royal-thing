@@ -68,7 +68,7 @@ We need to provide `needed` with both the previous record and the current record
 If we can't access the current record for whatever reason, simply re-use the document provided by `change`.
 
           .catch (error) ->
-            logger.error "#{pkg.name}: rev_info: #{error}"
+            logger.warning "#{pkg.name}: revs_info: #{error}"
             new_doc
           .then (doc) ->
             old_rev = doc._revs_info?[1]?.rev
@@ -78,7 +78,13 @@ Finally, retrieve the previous revision of the document,
             if old_rev?
               db.get id, rev: old_rev
             else
-              {}
+
+If none is specified, assumes that the document was just created (it's normal that there is no former revisions), or deleted (we weren't able to obtain `revs_info`).
+
+              old_doc = {}
+              old_doc[k] = v for own k,v of new_doc
+              old_doc._deleted = not (new_doc._deleted ? false)
+              old_doc
 
 then use `needed` to decide whether it was modified in a way that requires a restart.
 
