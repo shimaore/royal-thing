@@ -31,6 +31,7 @@
   "private": true,
   "dependencies": {
     "bluebird": "^2.6.2",
+    "opensips": "^1.0.0",
     "winston": "^0.8.3"
   }
 }
