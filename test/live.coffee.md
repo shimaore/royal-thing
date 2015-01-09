@@ -64,7 +64,7 @@ Write a new config.json file for the tests.
 
       restart = (done) ->
         start = new Date()
-        (cancel) ->
+        (_,cancel) ->
           stop = new Date()
           chai.expect(stop-start).to.be.gt config.interval
           Promise.delay(500).then ->

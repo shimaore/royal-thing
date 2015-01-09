@@ -33,7 +33,7 @@ Only restart at intervals, not on every change.
         on_interval = ->
           if restart_needed
             logger.info "#{pkg.name}: calling `restart`."
-            restart cancel
+            restart config, cancel
             .then ->
               restart_needed = false
               save_new_seq()
