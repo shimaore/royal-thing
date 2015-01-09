@@ -2,8 +2,9 @@
   "name": "royal-thing",
   "version": "1.0.0",
   "description": "A process that restarts the local registrant when needed",
-  "main": "index.js",
+  "main": "README.js",
   "scripts": {
+    "prepublish": "coffee -c *.coffee.md",
     "test": "mocha"
   },
   "repository": {
@@ -28,7 +29,6 @@
     "mocha": "^2.1.0",
     "superagent-as-promised": "^2.0.0"
   },
-  "private": true,
   "dependencies": {
     "bluebird": "^2.6.2",
     "opensips": "^1.0.0",
