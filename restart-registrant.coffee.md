@@ -5,8 +5,7 @@ Note: since there is not explicit way to restart an OpenSIPS instance, let's kil
 
     module.exports = (config,cancel) ->
       mi_udp config.mi_host, config.mi_port, command 'kill'
-      .then (r) ->
-        p = parse r
+      .catch -> true
 
     Promise = require 'bluebird'
     {mi_udp,command,parse} = require 'opensips/mi'
