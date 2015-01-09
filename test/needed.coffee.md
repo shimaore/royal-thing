@@ -6,6 +6,12 @@ Test!
       needed = require '../needed'
       it 'should not break if no host is present', ->
         assert not needed 'a', {}, {}
+      it 'should not report on deleted documents that remain deleted', ->
+        assert not needed 'a', {account:1, registrant_host:'a', registrant_username:'foo', _deleted:true}, {account:1,registrant_host:'a', registrant_username:'bar',_deleted:true}
+      it 'should report on created documents', ->
+        assert needed 'a', {account:1, registrant_host:'a', registrant_username:'foo', _deleted:true}, {account:1,registrant_host:'a', registrant_username:'foo'}
+      it 'should report on deleted documents', ->
+        assert needed 'a', {account:1, registrant_host:'a', registrant_username:'foo'}, {account:1,registrant_host:'a', registrant_username:'foo',_deleted:true}
       it 'should not report a host mismatch', ->
         assert not needed 'a', {account:1, registrant_host:'b'}, {account:1,registrant_host:'c'}
       it 'should not report a host match without data', ->

@@ -20,6 +20,7 @@ However since calls can't be placed if the `account` field is empty, we don't ne
 
       value = (doc,name) ->
         return null unless doc.account?
+        return null if doc._deleted
         host = doc.registrant_host?.split(':')[0]
         return null unless host is local_host
         doc[name] ? null
