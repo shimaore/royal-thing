@@ -68,7 +68,6 @@ We need to provide `needed` with both the previous record and the current record
 If we can't access the current record for whatever reason, simply re-use the document provided by `change`.
 
           .catch (error) ->
-            logger.warning "#{pkg.name}: revs_info: #{error}"
             new_doc
           .then (doc) ->
             old_rev = doc._revs_info?[1]?.rev
