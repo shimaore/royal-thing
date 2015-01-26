@@ -5,7 +5,9 @@
   "main": "README.js",
   "scripts": {
     "prepublish": "coffee -c *.coffee.md",
-    "test": "mocha"
+    "test": "mocha",
+    "start": "daemon -n royal-thing -o daemon.debug -D \"$PWD\" -r -- coffee ./README.coffee.md",
+    "stop": "daemon -n royal-thing -o daemon.debug --stop"
   },
   "repository": {
     "type": "git",
