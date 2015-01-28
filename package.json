@@ -4,7 +4,7 @@
   "description": "A process that restarts the local registrant when needed",
   "main": "README.js",
   "scripts": {
-    "prepublish": "coffee -c *.coffee.md",
+    "prepublish": "./node_modules/.bin/coffee -c *.coffee.md",
     "test": "mocha",
     "start": "daemon -n royal-thing -o daemon.debug -D \"$PWD\" -r -- node ./README.js",
     "stop": "daemon -n royal-thing -o daemon.debug --stop"
