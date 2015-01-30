@@ -17,6 +17,8 @@ Restarting the process & saving the update sequence
         restart_needed = false
         new_seq = null
 
+FIXME: Save the new seq in the database' _local vars, not in the config.
+
         save_new_seq = ->
           if new_seq?
             logger.info "#{pkg.name}: save new seq #{new_seq}."
@@ -61,6 +63,12 @@ Monitoring changes
           include_docs: true
           live: true
           filter: "#{pkg.name}/global_numbers"
+
+        .on 'error', (error) ->
+          logger.error "#{pkg.name}: change error #{error}"
+
+        .on 'uptodate', (resp) ->
+          logger.info "#{pkg.name}: change up-to-date #{resp}"
 
         .on 'change', ({id,seq,doc}) ->
           logger.info "#{pkg.name}: change on #{id}"
