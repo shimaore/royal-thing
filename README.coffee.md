@@ -10,6 +10,7 @@ A process that restarts the local registrant when needed
           run restart
         catch error
           logger.error "#{pkg.name}: Restarting on #{error}"
+      return
 
     run = (restart) ->
       install()
@@ -53,7 +54,7 @@ Only restart at intervals, not on every change.
               logger.info "#{pkg.name}: restart completed."
           else
             save_new_seq()
-          null
+          return
 
 Especially for tests, we need to provide a way to cancel; `cancel` is given as argument to the `restart` handler, and is returned by `run`.
 
@@ -118,7 +119,7 @@ then use `needed` to decide whether it was modified in a way that requires a res
           .catch (error) ->
             logger.error "#{pkg.name} failed to gather data about #{new_doc._id}: #{error}"
 
-          null
+          return
 
 Return both our instance of the database and a way to cancel the process.
 
