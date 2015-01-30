@@ -7,6 +7,8 @@ A process that restarts the local registrant when needed
     run = (restart) ->
       install()
       .then ({config,save}) ->
+        logger.info "#{pkg.name}: Starting."
+        PouchDB.debug.enable('*')
         db = new PouchDB config.provisioning
 
 Restarting the process & saving the update sequence
@@ -47,7 +49,7 @@ Only restart at intervals, not on every change.
 Especially for tests, we need to provide a way to cancel; `cancel` is given as argument to the `restart` handler, and is returned by `run`.
 
         cancel = ->
-          logger.info "#{pkg.name}: cancel!"
+          logger.info "#{pkg.name}: Stopping."
           changes.cancel()
           clearInterval interval
 
