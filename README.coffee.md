@@ -125,12 +125,24 @@ Return both our instance of the database and a way to cancel the process.
 
         {db,cancel}
 
-    logger = require 'winston'
+    pkg = require './package.json'
+
+    winston = require 'winston'
+    logger = new winston.Logger
+      transports: [
+        new winston.transports.Console
+          timestamp: true
+          colorize: true
+        new winston.transports.File
+          filename: "#{pkg.name}.log"
+          timestamp: true
+          maxsize: 1000*1000
+          maxFiles: 50
+      ]
     second = 1000
 
     PouchDB = require 'pouchdb'
     PouchDB.debug.enable('*')
-    pkg = require './package.json'
 
 If this module is used as an executable, default to using the `restart-registrant` module.
 
