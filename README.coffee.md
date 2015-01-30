@@ -16,7 +16,6 @@ A process that restarts the local registrant when needed
       install()
       .then ({config,save}) ->
         logger.info "#{pkg.name}: Starting."
-        PouchDB.debug.enable('*')
         db = new PouchDB config.provisioning
 
 Restarting the process & saving the update sequence
@@ -142,7 +141,6 @@ Return both our instance of the database and a way to cancel the process.
     second = 1000
 
     PouchDB = require 'pouchdb'
-    PouchDB.debug.enable('*')
 
 If this module is used as an executable, default to using the `restart-registrant` module.
 
