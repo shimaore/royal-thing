@@ -5,6 +5,7 @@
   "main": "README.js",
   "scripts": {
     "prepublish": "./node_modules/.bin/coffee -c *.coffee.md",
+    "pretest": "npm install",
     "test": "mocha",
     "start": "daemon -n royal-thing -o daemon.debug -D \"$PWD\" -r -- node ./README.js",
     "stop": "daemon -n royal-thing -o daemon.debug --stop"
