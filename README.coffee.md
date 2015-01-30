@@ -4,6 +4,13 @@ A process that restarts the local registrant when needed
     needed = require './needed'
     install = require './install'
 
+    main = (restart) ->
+      while true
+        try
+          run restart
+        catch error
+          logger.error "#{pkg.name}: Restarting on #{error}"
+
     run = (restart) ->
       install()
       .then ({config,save}) ->
@@ -66,6 +73,8 @@ Monitoring changes
 
         .on 'error', (error) ->
           logger.error "#{pkg.name}: change error #{error}"
+          do cancel
+          throw error
 
         .on 'uptodate', (resp) ->
           logger.info "#{pkg.name}: change up-to-date #{resp}"
@@ -125,6 +134,6 @@ Return both our instance of the database and a way to cancel the process.
 If this module is used as an executable, default to using the `restart-registrant` module.
 
     if require.main is module
-      run require './restart-registrant'
+      main require './restart-registrant'
     else
       module.exports = run
