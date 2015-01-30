@@ -17,6 +17,7 @@ Restarting the process & saving the update sequence
 
         save_new_seq = ->
           if new_seq?
+            logger.info "#{pkg.name}: save new seq #{new_seq}."
             save new_seq
             .then ->
               new_seq = null
@@ -41,10 +42,12 @@ Only restart at intervals, not on every change.
               logger.info "#{pkg.name}: restart completed."
           else
             save_new_seq()
+          null
 
 Especially for tests, we need to provide a way to cancel; `cancel` is given as argument to the `restart` handler, and is returned by `run`.
 
         cancel = ->
+          logger.info "#{pkg.name}: cancel!"
           changes.cancel()
           clearInterval interval
 
@@ -58,6 +61,7 @@ Monitoring changes
           filter: "#{pkg.name}/global_numbers"
 
         .on 'change', ({id,seq,doc}) ->
+          logger.info "#{pkg.name}: change on #{id}"
           new_doc = doc
 
 We need to provide `needed` with both the previous record and the current record. Let's try to retrieve the previous record by querying for `revs_info`.
@@ -94,7 +98,8 @@ then use `needed` to decide whether it was modified in a way that requires a res
             new_seq = seq
           .catch (error) ->
             logger.error "#{pkg.name} failed to gather data about #{new_doc._id}: #{error}"
-            throw error
+
+          null
 
 Return both our instance of the database and a way to cancel the process.
 
@@ -104,6 +109,7 @@ Return both our instance of the database and a way to cancel the process.
     second = 1000
 
     PouchDB = require 'pouchdb'
+    PouchDB.debug.enable('*')
     pkg = require './package.json'
 
 If this module is used as an executable, default to using the `restart-registrant` module.
