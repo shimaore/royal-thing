@@ -67,6 +67,8 @@ Too many changes to reasonnably process:
             new_seq = update_seq
             restart_needed = true
 
+          on_interval()
+
 Especially for tests, we need to provide a way to cancel; `cancel` is given as argument to the `restart` handler, and is returned by `run`.
 
         cancel = ->
