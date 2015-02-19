@@ -66,6 +66,17 @@ Monitoring changes
         .on 'error', (error) ->
           logger.error "#{pkg.name}: change error #{error}"
           do cancel
+
+If CouchDB takes too long to reply it might mean we are waaay behind in terms of update sequence number.
+In this case we force a restart and set the sequence number to our new sequence number.
+
+          if error.toString is 'ESOCKETTIMEDOUT'
+            db.info()
+            .then ({update_seq}) ->
+              new_seq = update_seq
+              restart_needed = true
+              run restart
+            return
           run restart
           return
 
