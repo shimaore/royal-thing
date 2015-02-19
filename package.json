@@ -1,6 +1,6 @@
 {
   "name": "royal-thing",
-  "version": "4.1.2",
+  "version": "4.2.0",
   "description": "A process that restarts the local registrant when needed",
   "main": "README.js",
   "scripts": {
