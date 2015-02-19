@@ -75,6 +75,7 @@ Especially for tests, we need to provide a way to cancel; `cancel` is given as a
           logger.info "#{pkg.name}: Stopping."
           changes.cancel()
           clearInterval interval
+          db = null
 
 Monitoring changes
 ------------------
