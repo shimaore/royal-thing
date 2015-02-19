@@ -18,24 +18,6 @@ Restarting the process & saving the update sequence
         restart_needed = false
         new_seq = null
 
-Force a restart if the database is too far away from our own sequence number.
-
-        db.info()
-        .then ({update_seq}) ->
-          our_seq = config.update_seq ? 0
-
-Database was reset, or other inconsistency where the database ends up being "behind" us:
-
-          if update_seq < our_seq
-            new_seq = update_seq
-            restart_needed = true
-
-Too many changes to reasonnably process:
-
-          if update_seq > our_seq + (config.max_delta ? max_delta)
-            new_seq = update_seq
-            restart_needed = true
-
 FIXME: Save the new seq in the database' _local vars, not in the config.
 
         save_new_seq = ->
@@ -66,6 +48,24 @@ Only restart at intervals, not on every change.
           else
             save_new_seq()
           return
+
+Force a restart if the database is too far away from our own sequence number.
+
+        db.info()
+        .then ({update_seq}) ->
+          our_seq = config.update_seq ? 0
+
+Database was reset, or other inconsistency where the database ends up being "behind" us:
+
+          if update_seq < our_seq
+            new_seq = update_seq
+            restart_needed = true
+
+Too many changes to reasonnably process:
+
+          if update_seq > our_seq + (config.max_delta ? max_delta)
+            new_seq = update_seq
+            restart_needed = true
 
 Especially for tests, we need to provide a way to cancel; `cancel` is given as argument to the `restart` handler, and is returned by `run`.
 
