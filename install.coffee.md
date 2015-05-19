@@ -1,7 +1,7 @@
 Since we need to monitor only changes in global numbers, add a filter in the provisioning database towards that goal.
 
     module.exports = ->
-      config = require './config.json'
+      config = require process.env.CONFIG ? './config.json'
 
       design_doc = "_design/#{pkg.name}"
       db = new PouchDB config.provisioning_admin
