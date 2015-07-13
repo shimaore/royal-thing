@@ -92,11 +92,11 @@ Monitoring changes
           run restart
           return
 
-        .on 'uptodate', (resp) ->
-          logger.info "#{pkg.name}: change up-to-date #{resp}"
+        .on 'uptodate', ->
+          logger.info "#{pkg.name}: change up-to-date"
 
         .on 'change', ({id,seq,doc}) ->
-          logger.info "#{pkg.name}: change on #{id}"
+          logger.info "#{pkg.name}: change on #{id} (seq #{seq})"
           new_doc = doc
 
 We need to provide `needed` with both the previous record and the current record. Let's try to retrieve the previous record by querying for `revs_info`.
