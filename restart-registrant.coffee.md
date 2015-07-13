@@ -13,7 +13,7 @@ Note: since there is not explicit way to restart an OpenSIPS instance, let's kil
         null
       .then ->
         logger.info "Starting registrant"
-        exec 'npm start', cwd:CWD
+        exec 'npm start', cwd:CWD, timeout:30*1000
       .catch ->
         logger.info "Starting registrant (again)"
         exec 'npm start', cwd:CWD
