@@ -10,7 +10,8 @@ On first run (no `update_seq` in configuration) retrieve the last `update_seq` a
 
       save = (seq) ->
         config.update_seq = seq
-        fs.writeFileAsync (path.join (path.dirname module.filename), './config.json'), JSON.stringify config, null, '  '
+        unless process.env.CONFIG_READONLY is 'true'
+          fs.writeFileAsync (path.join (path.dirname module.filename), './config.json'), JSON.stringify config, null, '  '
 
       db.info()
       .then (info) ->
