@@ -21,7 +21,7 @@ The plan
 
     describe 'Live test', ->
       docker =
-        image: "shimaore/couchdb"
+        image: "shimaore/couchdb:1.6.1"
         container: "#{pkg.name}-test-container"
         name: "#{pkg.name}-test-instance"
 
