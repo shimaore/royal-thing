@@ -10,13 +10,11 @@ The plan
     current_dir = path.dirname __filename
     process.chdir current_dir
     pkg = require '../package.json'
+    debug = (require 'debug') "#{pkg.name}:test:live"
     seconds = 1000
 
     fs = Promise.promisifyAll require 'fs'
 
-    logger = require 'winston'
-    logger.remove logger.transports.Console
-    logger.add logger.transports.Console, timestamp:on
     exec = (require 'exec-as-promised') logger
 
     describe 'Live test', ->
@@ -45,14 +43,14 @@ Write a new config.json file for the tests.
           fs.writeFileAsync '../config.json', JSON.stringify config
 
         .then ->
-          logger.info "#{pkg.name} live tester: Waiting #{delay} seconds for image to be ready."
+          debug "#{pkg.name} live tester: Waiting #{delay} seconds for image to be ready."
         .delay delay*seconds
         .then ->
           require 'superagent-as-promised'
           .get 'http://127.0.0.1:5984'
           .accept 'json'
         .then ({body}) ->
-          logger.info "CouchDB #{body.version} is ready."
+          debug "CouchDB #{body.version} is ready."
 
 
       after ->

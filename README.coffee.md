@@ -9,7 +9,7 @@ A process that restarts the local registrant when needed
     run = (restart) ->
       install()
       .then ({config,save}) ->
-        logger.info "#{pkg.name}: Starting."
+        debug "Starting."
         db = new PouchDB config.provisioning
 
 Restarting the process & saving the update sequence
@@ -22,7 +22,7 @@ FIXME: Save the new seq in the database' _local vars, not in the config.
 
         save_new_seq = ->
           if new_seq?
-            logger.info "#{pkg.name}: save new seq #{new_seq}."
+            debug "Save new seq #{new_seq}."
             save new_seq
             .then ->
               new_seq = null
@@ -33,18 +33,18 @@ Only restart at intervals, not on every change.
           try
             do on_interval
           catch error
-            logger.error "#{pkg.name}: error: #{error}"
+            debug "Error: #{error}"
         , config.interval ? 61*second
 
         on_interval = ->
           if restart_needed
-            logger.info "#{pkg.name}: calling `restart`."
+            debug "Calling `restart`."
             restart config, cancel
             .then ->
               restart_needed = false
               save_new_seq()
             .then ->
-              logger.info "#{pkg.name}: restart completed."
+              debug "Restart completed."
           else
             save_new_seq()
           return
@@ -72,7 +72,7 @@ Too many changes to reasonnably process:
 Especially for tests, we need to provide a way to cancel; `cancel` is given as argument to the `restart` handler, and is returned by `run`.
 
         cancel = ->
-          logger.info "#{pkg.name}: Stopping."
+          debug "Stopping."
           changes.cancel()
           clearInterval interval
           db = null
@@ -87,16 +87,16 @@ Monitoring changes
           filter: "#{pkg.name}/global_numbers"
 
         .on 'error', (error) ->
-          logger.error "#{pkg.name}: change error #{error}"
+          debug "Change error #{error}"
           do cancel
           run restart
           return
 
         .on 'uptodate', ->
-          logger.info "#{pkg.name}: change up-to-date"
+          debug "Change up-to-date"
 
         .on 'change', ({id,seq,doc}) ->
-          logger.info "#{pkg.name}: change on #{id} (seq #{seq})"
+          debug "Change on #{id} (seq #{seq})"
           new_doc = doc
 
 We need to provide `needed` with both the previous record and the current record. Let's try to retrieve the previous record by querying for `revs_info`.
@@ -129,10 +129,10 @@ then use `needed` to decide whether it was modified in a way that requires a res
           .then (old_doc) ->
             if needed (process.env.ROYAL_THING_HOST ? config.host), old_doc, new_doc
               restart_needed = true
-              logger.info "#{pkg.name}: triggering restart because of #{id}"
+              debug "Triggering restart because of #{id}"
             new_seq = seq
           .catch (error) ->
-            logger.error "#{pkg.name} failed to gather data about #{new_doc._id}: #{error}"
+            debug "Failed to gather data about #{new_doc._id}: #{error}"
 
           return
 
@@ -141,19 +141,8 @@ Return both our instance of the database and a way to cancel the process.
         {db,cancel}
 
     pkg = require './package.json'
+    debug = (require 'debug') pkg.name
 
-    winston = require 'winston'
-    logger = new winston.Logger
-      transports: [
-        new winston.transports.Console
-          timestamp: true
-          colorize: true
-        new winston.transports.File
-          filename: "#{pkg.name}.log"
-          timestamp: true
-          maxsize: 1000*1000
-          maxFiles: 50
-      ]
     second = 1000
 
     PouchDB = require 'pouchdb'

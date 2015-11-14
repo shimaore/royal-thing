@@ -6,18 +6,19 @@ Note: since there is not explicit way to restart an OpenSIPS instance, let's kil
     CWD = '/opt/ccnq3/src/applications/registrant'
 
     module.exports = (config,cancel) ->
-      logger.info "Stopping registrant"
+      debug "Stopping registrant"
       exec 'npm stop', cwd:CWD
       .catch (error) ->
-        logger.error "Stopping registrant failed (ignored)"
+        debug "Stopping registrant failed (ignored)"
         null
       .then ->
-        logger.info "Starting registrant"
+        debug "Starting registrant"
         exec 'npm start', cwd:CWD, timeout:30*1000
       .catch ->
-        logger.info "Starting registrant (again)"
+        debug "Starting registrant (again)"
         exec 'npm start', cwd:CWD
 
     Promise = require 'bluebird'
-    logger = require 'winston'
     exec = (require 'exec-as-promised') logger
+    pkg = require './package'
+    debug = (require 'debug') "#{pkg.name}:restart-registrant"
