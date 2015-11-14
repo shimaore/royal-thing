@@ -19,6 +19,6 @@ Note: since there is not explicit way to restart an OpenSIPS instance, let's kil
         exec 'npm start', cwd:CWD
 
     Promise = require 'bluebird'
-    exec = (require 'exec-as-promised') logger
+    exec = (require 'exec-as-promised')()
     pkg = require './package'
     debug = (require 'debug') "#{pkg.name}:restart-registrant"

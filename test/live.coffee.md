@@ -15,7 +15,7 @@ The plan
 
     fs = Promise.promisifyAll require 'fs'
 
-    exec = (require 'exec-as-promised') logger
+    exec = (require 'exec-as-promised')()
 
     describe 'Live test', ->
       docker =
