@@ -147,9 +147,4 @@ Return both our instance of the database and a way to cancel the process.
 
     PouchDB = require 'pouchdb'
 
-If this module is used as an executable, default to using the `restart-registrant` module.
-
-    if require.main is module
-      run require './restart-registrant'
-    else
-      module.exports = run
+    module.exports = run
