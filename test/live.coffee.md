@@ -14,6 +14,7 @@ The plan
     seconds = 1000
 
     fs = Promise.promisifyAll require 'fs'
+    request = (require 'superagent-as-promised') require 'superagent'
 
     exec = (require 'exec-as-promised')()
 
@@ -46,7 +47,7 @@ Write a new config.json file for the tests.
           debug "#{pkg.name} live tester: Waiting #{delay} seconds for image to be ready."
         .delay delay*seconds
         .then ->
-          require 'superagent-as-promised'
+          request
           .get 'http://127.0.0.1:5984'
           .accept 'json'
         .then ({body}) ->

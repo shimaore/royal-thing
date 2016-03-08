@@ -28,7 +28,8 @@
     "coffee-script": "^1.8.0",
     "exec-as-promised": "^2.0.0",
     "mocha": "^2.1.0",
-    "superagent-as-promised": "^2.0.0"
+    "superagent": "^1.8.0-beta.2",
+    "superagent-as-promised": "^3.2.1"
   },
   "dependencies": {
     "bluebird": "^3.0.5",
