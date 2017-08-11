@@ -14,7 +14,8 @@ The plan
     debug = (require 'debug') "#{pkg.name}:test:live"
     seconds = 1000
     path = require 'path'
-    PouchDB = require 'pouchdb'
+    PouchDB = require 'pouchdb-core'
+      .plugin require 'pouchdb-adapter-http'
 
     fs = Promise.promisifyAll require 'fs'
     request = (require 'superagent-as-promised') require 'superagent'

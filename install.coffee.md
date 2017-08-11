@@ -50,7 +50,8 @@ Since we need to monitor only changes in global numbers, add a filter in the pro
     Promise = require 'bluebird'
     fs = Promise.promisifyAll require 'fs'
     pkg = require './package.json'
-    PouchDB = require 'pouchdb'
+    PouchDB = require 'pouchdb-core'
+      .plugin require 'pouchdb-adapter-http'
     debug = (require 'debug') "#{pkg.name}:install"
 
     fun = (f) -> "(#{f})"
