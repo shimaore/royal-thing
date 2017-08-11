@@ -18,7 +18,7 @@ The plan
       .plugin require 'pouchdb-adapter-http'
 
     fs = Promise.promisifyAll require 'fs'
-    request = (require 'superagent-as-promised') require 'superagent'
+    request = require 'superagent'
 
     exec = (require 'exec-as-promised')()
 
