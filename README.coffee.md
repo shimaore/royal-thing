@@ -155,7 +155,6 @@ Return both our instance of the database and a way to cancel the process.
 
     second = 1000
 
-    PouchDB = require 'pouchdb-core'
-      .plugin require 'pouchdb-adapter-http'
+    PouchDB = require 'ccnq4-pouchdb'
 
     module.exports = run
