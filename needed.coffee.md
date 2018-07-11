@@ -5,9 +5,11 @@ First let's define what we mean by "when needed". We mean that changes were brou
       'registrant_host'
       'registrant_password'
       'registrant_realm'
-      'registrant_remote_ipv4'
+      'registrant_domain'
+      'registrant_remote_ipv4' # legacy
       'registrant_socket'
       'registrant_username'
+      'registrant_proxy'
     ]
 
 However since calls can't be placed if the `account` field is empty, we don't need to be alerted of changes in that case. Also, obviously the changes only apply to a host that is listed as the `registrant_host`.
