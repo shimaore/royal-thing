@@ -4,14 +4,12 @@ A process that restarts the local registrant when needed
     needed = require './needed'
     install = require './install'
 
-    seem = require 'seem'
-
     max_delta = 200
 
-    run = seem (restart,config) ->
+    run = (restart,config) ->
 
       debug 'Calling install()'
-      {config,save} = yield install config
+      {config,save} = await install config
         .catch (error) ->
           debug "install failed: #{error.stack ? error}"
           {}
@@ -27,38 +25,38 @@ Restarting the process & saving the update sequence
 
 FIXME: Save the new seq in the database' _local vars, not in the config.
 
-      save_new_seq = seem ->
+      save_new_seq = ->
         if new_seq?
           debug "Save new seq #{new_seq}."
-          yield save new_seq
+          await save new_seq
           new_seq = null
 
 Only restart at intervals, not on every change.
 
-      on_interval = seem ->
+      on_interval = ->
         # debug 'on_interval'
         if restart_needed
           debug "Calling `restart`."
-          yield restart config, cancel
+          await restart config, cancel
           restart_needed = false
-          yield save_new_seq()
+          await save_new_seq()
           debug "Restart completed."
         else
-          yield save_new_seq()
+          await save_new_seq()
         return
 
 Start the `on_interval` function.
 
-      interval = setInterval (seem ->
+      interval = setInterval (->
         try
-          yield on_interval()
+          await on_interval()
         catch error
           debug "Error: #{error}"
       ), config.interval ? 61*second
 
 Force a restart if the database is too far away from our own sequence number.
 
-      {update_seq} = yield db.info()
+      {update_seq} = await db.info()
       our_seq = config.update_seq ? 0
 
 Database was reset, or other inconsistency where the database ends up being "behind" us:
@@ -73,7 +71,7 @@ Too many changes to reasonnably process:
         new_seq = update_seq
         restart_needed = true
 
-      yield on_interval()
+      await on_interval()
 
 Especially for tests, we need to provide a way to cancel; `cancel` is given as argument to the `restart` handler, and is returned by `run`.
 
@@ -102,13 +100,13 @@ Monitoring changes
       .on 'uptodate', ->
         debug "Change up-to-date"
 
-      .on 'change', seem ({id,seq,doc}) ->
+      .on 'change', ({id,seq,doc}) ->
         debug "Change on #{id} (seq #{seq})"
         new_doc = doc
 
 We need to provide `needed` with both the previous record and the current record. Let's try to retrieve the previous record by querying for `revs_info`.
 
-        doc = yield db
+        doc = await db
           .get id,
             revs_info: true
 
@@ -122,7 +120,7 @@ If we can't access the current record for whatever reason, simply re-use the doc
 Finally, retrieve the previous revision of the document,
 
         if old_rev?
-          old_doc = yield db
+          old_doc = await db
             .get id, rev: old_rev
             .catch (error) ->
               debug "Failed to gather data about #{id}: #{error.stack ? error}"
