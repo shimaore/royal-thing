@@ -1,54 +1,37 @@
-    module.exports = (config) ->
-      debug 'Start', config
-      unless config?
-        config_file = process.env.CONFIG
-        unless config_file?
-          throw new Error 'Missing CONFIG environment variable'
-        config = JSON.parse await fs.readFileAsync config_file, encoding:'utf8'
+    module.exports = (host,db) ->
+      debug 'Start', host
 
-      design_doc = "_design/#{pkg.name}"
-      db = new PouchDB config.provisioning_admin
+      local_uri = new URL "_local/royal-#{host}", db.uri+'/'
 
       save = (seq) ->
         debug 'save', {seq}
-        config.update_seq = seq
-        return false if process.env.CONFIG_READONLY is 'true'
-        return false unless config_file?
-        await fs
-          .writeFileAsync config_file, JSON.stringify(config, null, '  '), encoding:'utf8'
-          .catch (error) ->
-            debug "save: #{config_file}: #{error.stack ? error}"
-            null
+        doc = await db.agent
+          .get local_uri
+          .accept 'json'
+          .then ({body}) -> body
+          .catch -> {}
 
-On first run (no `update_seq` in configuration) retrieve the last `update_seq` and save it in the configuration file.
+        if not seq?
+          return doc
 
-      if not config.update_seq?
+        doc.update_seq = seq
+        await db.agent
+          .put local_uri
+          .send doc
+
+On first run, retrieve the last `update_seq` and save it.
+
+      {update_seq} = await save()
+
+      if not update_seq?
         debug 'install: save current update_seq'
         info = await db.info()
         await save info.update_seq
+      else
+        debug 'Re-using', {update_seq}
 
-Since we need to monitor only changes in global numbers, add a filter in the provisioning database towards that goal.
+      {save}
 
-      doc = await db
-        .get design_doc
-        .catch ->
-          _id:design_doc
-      doc.filters =
-        global_numbers: fun ({_id}) ->
-          _id.match /^number:\d+$/
-      await db
-        .put doc
-        .catch (error) ->
-          debug "put failed: #{error.stack ? error}", doc
-
-      db.close()
-      {config,save}
-
-    path = require 'path'
-    Promise = require 'bluebird'
-    fs = Promise.promisifyAll require 'fs'
+    {URL} = require 'url'
     pkg = require './package.json'
-    PouchDB = require 'ccnq4-pouchdb'
     debug = (require 'debug') "#{pkg.name}:install"
-
-    fun = (f) -> "(#{f})"

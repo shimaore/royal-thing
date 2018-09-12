@@ -4,26 +4,28 @@ A process that restarts the local registrant when needed
     needed = require './needed'
     install = require './install'
 
+    most = require 'most'
+
     max_delta = 200
 
-    run = (restart,config) ->
+    run = (restart,config,limit = most.never()) ->
+
+      host = process.env.ROYAL_THING_HOST ? config.host
+      db = new CouchDB config.provisioning
 
       debug 'Calling install()'
-      {config,save} = await install config
+      {save} = await install host, db
         .catch (error) ->
-          debug "install failed: #{error.stack ? error}"
-          {}
+          debug.dev "install failed: #{error.stack ? error}"
+          throw error
 
-      debug "Starting."
-      db = new PouchDB config.provisioning
+      debug 'Starting.'
 
 Restarting the process & saving the update sequence
 ---------------------------------------------------
 
       restart_needed = false
       new_seq = null
-
-FIXME: Save the new seq in the database' _local vars, not in the config.
 
       save_new_seq = ->
         if new_seq?
@@ -37,7 +39,7 @@ Only restart at intervals, not on every change.
         # debug 'on_interval'
         if restart_needed
           debug "Calling `restart`."
-          await restart config, cancel
+          await restart config
           restart_needed = false
           await save_new_seq()
           debug "Restart completed."
@@ -51,57 +53,39 @@ Start the `on_interval` function.
         try
           await on_interval()
         catch error
-          debug "Error: #{error}"
+          debug.dev "Error: #{error}"
       ), config.interval ? 61*second
+
+      limit.observe ->
+        debug 'No longer monitoring'
+        clearInterval interval
 
 Force a restart if the database is too far away from our own sequence number.
 
       {update_seq} = await db.info()
-      our_seq = config.update_seq ? 0
+      our_seq = (await save())?.update_seq ? 0
 
-Database was reset, or other inconsistency where the database ends up being "behind" us:
+      debug 'Analyzing', {update_seq,our_seq}
 
-      if update_seq < our_seq
-        new_seq = update_seq
-        restart_needed = true
-
-Too many changes to reasonnably process:
-
-      if update_seq > our_seq + (config.max_delta ? max_delta)
+      if update_seq isnt our_seq
         new_seq = update_seq
         restart_needed = true
 
       await on_interval()
 
-Especially for tests, we need to provide a way to cancel; `cancel` is given as argument to the `restart` handler, and is returned by `run`.
-
-      cancel = ->
-        debug "Stopping."
-        changes?.cancel()
-        clearInterval interval
-        db = null
-
 Monitoring changes
 ------------------
 
-      changes = db.changes
-        since: config.update_seq ? 0
-        include_docs: true
-        live: true
-        filter: "#{pkg.name}/global_numbers"
+      map_function = (emit) ->
+        (doc) ->
+          if doc._id.match /^number:\d+$/
+            emit null
 
-      .on 'error', (error) ->
-        debug "Change error #{error}"
-        cancel?()
-        debug "Change error #{error} → restart"
-        run restart, config
-        return
-
-      .on 'uptodate', ->
-        debug "Change up-to-date"
-
-      .on 'change', ({id,seq,doc}) ->
-        debug "Change on #{id} (seq #{seq})"
+      completed = db
+      .query_changes map_function, since: our_seq, include_docs: true
+      .until limit
+      .observe ({id,seq,doc}) ->
+        debug "Change on #{id} (seq #{seq})", doc
         new_doc = doc
 
 We need to provide `needed` with both the previous record and the current record. Let's try to retrieve the previous record by querying for `revs_info`.
@@ -120,6 +104,7 @@ If we can't access the current record for whatever reason, simply re-use the doc
 Finally, retrieve the previous revision of the document,
 
         if old_rev?
+          debug 'Retrieving previous version', old_rev
           old_doc = await db
             .get id, rev: old_rev
             .catch (error) ->
@@ -129,30 +114,29 @@ Finally, retrieve the previous revision of the document,
 If none is specified, assumes that the document was just created (it's normal that there is no former revisions), or deleted (we weren't able to obtain `revs_info`).
 
         unless old_doc?
+          debug 'Constructing previous document'
           old_doc = {}
           old_doc[k] = v for own k,v of new_doc
           old_doc._deleted = not (new_doc._deleted ? false)
 
 then use `needed` to decide whether it was modified in a way that requires a restart.
 
-        if needed (process.env.ROYAL_THING_HOST ? config.host), old_doc, new_doc
+        if needed host, old_doc, new_doc
           restart_needed = true
           debug "Triggering restart because of #{id}"
         new_seq = seq
 
         return
+      .catch (error) ->
+        debug.dev 'Failed (will not restart)', error
 
-Return both our instance of the database and a way to cancel the process.
-
-      debug 'Ready'
-
-      {db,cancel}
+      {completed}
 
     pkg = require './package.json'
     debug = (require 'debug') pkg.name
 
     second = 1000
 
-    PouchDB = require 'ccnq4-pouchdb'
+    CouchDB = require 'most-couchdb'
 
     module.exports = run

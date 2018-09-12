@@ -32,9 +32,11 @@ However since calls can't be placed if the `account` field is empty, we don't ne
           old_value = value old_doc, name
           new_value = value new_doc, name
           if old_value isnt new_value
+            debug 'Field changed', name, old_value, new_value
             changed = true
       changed
 
     module.exports = needed
     assert = require 'assert'
     pkg = require './package.json'
+    debug = (require 'debug') "#{pkg.name}:needed"

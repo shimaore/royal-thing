@@ -4,31 +4,36 @@ The plan
     chai = require 'chai'
     chai.should()
 
-    Promise = require 'bluebird'
-    path = require 'path'
-    current_dir = path.dirname __filename
-    process.chdir current_dir
+    sleep = (timeout) -> new Promise (resolve) -> setTimeout resolve, timeout
+
     pkg = require '../package.json'
     debug = (require 'debug') "#{pkg.name}:test:live"
     seconds = 1000
-    path = require 'path'
-    PouchDB = require 'ccnq4-pouchdb'
-
-    fs = Promise.promisifyAll require 'fs'
-    request = require 'superagent'
-
-    exec = (require 'exec-as-promised')()
+    CouchDB = require 'most-couchdb'
+    most = require 'most'
+    {EventEmitter} = require 'events'
 
     describe 'Live test', ->
 
-      default_interval = 10*seconds # keep it short so that we don't have to wait forever for the test suite to finish!!
+      default_interval = 7*seconds # keep it short so that we don't have to wait forever for the test suite to finish!!
       default_host = 'phone.example.net'
 
+      stop = ->
+        ev = new EventEmitter()
+        limit: most.fromEvent('end', ev)
+        close: -> ev.emit 'end'
+
       config = (name) ->
-        provisioning: "http://couchdb:5984/db_#{name}"
-        provisioning_admin: "http://couchdb:5984/db_#{name}"
+        provisioning: "http://admin:password@couchdb:5984/db_#{name}"
+        provisioning_admin: "http://admin:password@couchdb:5984/db_#{name}"
         interval: default_interval
         host: default_host
+
+      create = (db) ->
+        await db.destroy().catch -> yes
+        await db.agent
+          .put db.uri
+          .accept 'json'
 
       record =
         _id:'number:33987654321'
@@ -39,245 +44,245 @@ The plan
         registrant_password:'bar'
         registrant_host: default_host
 
-      before ->
-        @timeout 90*seconds
-        debug "#{pkg.name} live tester: Waiting #{delay} seconds for image to be ready."
-        await Promise.delay delay*seconds
-        {body} = await request
-          .get 'http://couchdb:5984'
-          .accept 'json'
-        debug "CouchDB #{body.version} is ready."
-
-      restart = (done) ->
-        start = new Date()
-        (_,cancel) ->
-          stop = new Date()
-          delay = stop-start
+      restart = ->
+        start_time = new Date()
+        error = new Error "Was never called."
+        handler: ->
+          stop_time = new Date()
+          delay = stop_time-start_time
           debug 'restart delay', delay
           if delay > default_interval
-            done()
+            error = null
           else
-            done new Error "Delay too short, observed = #{delay}, expected = #{default_interval}"
-          await Promise.delay(500)
-          cancel?()
+            error = new Error "Delay too short, observed = #{delay}, expected = #{default_interval}"
           null
+        errored: ->
+          throw error if error
 
       run = require '..'
 
       name = 1
 
-      it 'should not report on no changes', (done) ->
+      it 'should not report on no changes', ->
         @timeout 15*seconds
-        do ->
-          # prep
-          cfg = config name++
-          db = new PouchDB cfg.provisioning
-          await db.put record
+        # prep
+        cfg = config name++
+        db = new CouchDB cfg.provisioning
+        await create db
+        await db.put record
 
-          # uut
-          await run (-> done new Error 'Should not have called'), cfg
+        # uut
+        error = null
+        {limit,close} = stop()
+        {completed} = await run (-> error = new Error 'Should not have called'), cfg, limit
 
-          # check
-          await Promise.delay default_interval+2*seconds
-          done()
-        null
+        # check
+        await sleep default_interval+2*seconds
+        close()
+        await completed
+        throw error if error
 
-      it 'should not report on put with no changes', (done) ->
+      it 'should not report on put with no changes', ->
         @timeout 15*seconds
-        do ->
-          # prep
-          cfg = config name++
-          db = new PouchDB cfg.provisioning
-          await db.put record
+        # prep
+        cfg = config name++
+        db = new CouchDB cfg.provisioning
+        await create db
+        await db.put record
 
-          # uut
-          await run (-> done new Error 'Should not have called'), cfg
+        # uut
+        error = null
+        {limit,close} = stop()
+        {completed} = await run (-> error = new Error 'Should not have called'), cfg, limit
 
-          # trigger
-          doc = await db.get record._id
-          await db.put doc
-          await Promise.delay default_interval+2*seconds
-          done()
-        null
+        # trigger
+        doc = await db.get record._id
+        await db.put doc
 
-      it 'should report on creation', (done) ->
+        # check
+        await sleep default_interval+2*seconds
+        close()
+        await completed
+        throw error if error
+
+      it 'should report on creation', ->
         @timeout 11*seconds
-        do ->
-          # prep
-          cfg = config name++
-          db = new PouchDB cfg.provisioning
+        # prep
+        cfg = config name++
+        db = new CouchDB cfg.provisioning
+        await create db
 
-          # uut
-          await run (restart done), cfg
+        # uut
+        {handler,errored} = restart()
+        {limit,close} = stop()
+        {completed} = await run handler, cfg, limit
 
-          # trigger
-          await db.put record
-        null
+        # trigger
+        await db.put record
 
-      it 'should report on update', (done) ->
+        # check
+        await sleep default_interval+2*seconds
+        close()
+        await completed
+        errored()
+
+      it 'should report on update', ->
         @timeout 11*seconds
-        do ->
-          # prep
-          cfg = config name++
-          db = new PouchDB cfg.provisioning
-          await db.put record
+        # prep
+        cfg = config name++
+        db = new CouchDB cfg.provisioning
+        await create db
+        await db.put record
 
-          # uut
-          await run (restart done), cfg
+        # uut
+        {handler,errored} = restart()
+        {limit,close} = stop()
+        {completed} = await run handler, cfg, limit
 
-          # trigger
-          doc = await db.get record._id
-          doc.registrant_password = 'boo'
-          await db.put doc
-        null
+        # trigger
+        doc = await db.get record._id
+        doc.registrant_password = 'boo'
+        await db.put doc
 
-      it 'should report on put with no changes preceded by changes', (done) ->
+        # check
+        await sleep default_interval+2*seconds
+        close()
+        await completed
+        errored()
+
+      it 'should report on put with no changes preceded by changes', ->
         @timeout 12*seconds
-        do ->
-          # prep
-          cfg = config name++
-          db = new PouchDB cfg.provisioning
-          await db.put record
+        # prep
+        cfg = config name++
+        db = new CouchDB cfg.provisioning
+        await create db
+        await db.put record
 
-          # uut
-          await run (restart done), cfg
+        # uut
+        {handler,errored} = restart()
+        {limit,close} = stop()
+        {completed} = await run handler, cfg, limit
 
-          # trigger
-          doc = await db.get record._id
-          doc.registrant_password = 'bar'
-          await db.put doc
-          doc = await db.get record._id
-          doc.registrant_password = 'boo'
-          await db.put doc
-        null
+        # trigger
+        doc = await db.get record._id
+        doc.registrant_password = 'bar'
+        await db.put doc
+        doc = await db.get record._id
+        doc.registrant_password = 'boo'
+        await db.put doc
 
-      it 'should report on deletion', (done) ->
+        # check
+        await sleep default_interval+2*seconds
+        close()
+        await completed
+        errored()
+
+      it 'should report on deletion', ->
         @timeout 12*seconds
-        do ->
-          # prep
-          cfg = config name++
-          db = new PouchDB cfg.provisioning
-          await db.put record
+        # prep
+        cfg = config name++
+        db = new CouchDB cfg.provisioning
+        await create db
+        await db.put record
 
-          # uut
-          await run (restart done), cfg
+        # uut
+        {handler,errored} = restart()
+        {limit,close} = stop()
+        {completed} = await run handler, cfg, limit
 
-          # trigger
-          doc = await db.get record._id
-          doc._deleted = true
-          await db.put doc
-        null
+        # trigger
+        doc = await db.get record._id
+        doc._deleted = true
+        await db.put doc
 
-      it 'should report on creation after deletion', (done) ->
+        # check
+        await sleep default_interval+2*seconds
+        close()
+        await completed
+        errored()
+
+      it 'should report on creation after deletion', ->
         @timeout 12*seconds
-        do ->
-          # prep
-          cfg = config name++
-          db = new PouchDB cfg.provisioning
-          await db.put record
-          doc = await db.get record._id
-          doc._deleted = true
-          await db.put doc
+        # prep
+        cfg = config name++
+        db = new CouchDB cfg.provisioning
+        await create db
+        await db.put record
+        doc = await db.get record._id
+        doc._deleted = true
+        await db.put doc
 
-          # uut
-          await run (restart done), cfg
+        # uut
+        {handler,errored} = restart()
+        {limit,close} = stop()
+        {completed} = await run handler, cfg, limit
 
-          # trigger
-          await Promise.delay 500
-          await db.put
-            _id:'number:33987654321'
-            type:'number'
-            number:'33987654321'
-            account:'test2'
-            registrant_username:'test2'
-            registrant_password:'foobar'
-            registrant_host: default_host
-        null
+        # trigger
+        await sleep 500
+        await db.put
+          _id:'number:33987654321'
+          type:'number'
+          number:'33987654321'
+          account:'test2'
+          registrant_username:'test2'
+          registrant_password:'foobar'
+          registrant_host: default_host
 
-      it 'should report on update after deletion', (done) ->
+        # check
+        await sleep default_interval+2*seconds
+        close()
+        await completed
+        errored()
+
+      it 'should report on update after deletion', ->
         @timeout 12*seconds
-        do ->
-          # prep
-          cfg = config name++
-          db = new PouchDB cfg.provisioning
-          await db.put record
-          doc = await db.get record._id
-          doc._deleted = true
-          await db.put doc
+        # prep
+        cfg = config name++
+        db = new CouchDB cfg.provisioning
+        await create db
+        await db.put record
+        doc = await db.get record._id
+        doc._deleted = true
+        await db.put doc
 
-          # uut
-          await run (restart done), cfg
+        # uut
+        {handler,errored} = restart()
+        {limit,close} = stop()
+        {completed} = await run handler, cfg, limit
 
-          # trigger
-          await db.put record
-        null
+        # trigger
+        await db.put record
 
-      it 'should report on deletion after deletion', (done) ->
+        # check
+        await sleep default_interval+2*seconds
+        close()
+        await completed
+        errored()
+
+      it.skip 'should report on deletion after deletion', ->
         @timeout 12*seconds
-        do ->
-          # prep
-          cfg = config name++
-          db = new PouchDB cfg.provisioning
-          await db.put record
-          doc = await db.get record._id
-          doc._deleted = true
-          await db.put doc
+        # prep
+        cfg = config name++
+        db = new CouchDB cfg.provisioning
+        await create db
+        await db.put record
+        doc = await db.get record._id
+        doc._deleted = true
+        await db.put doc
 
-          # uut
-          await run (restart done), cfg
+        # uut
+        {handler,errored} = restart()
+        {limit,close} = stop()
+        {completed} = await run handler, cfg, limit
 
-          # trigger
-          doc =
-            _id: record._id
-            _deleted: true
-          await db.put doc
-        null
+        # trigger
+        doc =
+          _id: record._id
+          _deleted: true
+        await db.put doc
 
-    describe 'When using a config file', ->
-      docker =
-        image: "shimaore/couchdb:1.6.1"
-        container: "#{pkg.name}-test-container-2"
-        name: "#{pkg.name}-test-instance-2"
-
-      before ->
-        @timeout 90*seconds
-        delay = 2
-        await exec "docker rm #{docker.container}"
-          .catch -> true
-        await exec "docker run -d --net=host --name #{docker.container} #{docker.image}"
-
-        debug "#{pkg.name} live tester: Waiting #{delay} seconds for image to be ready."
-        await Promise.delay delay*seconds
-        {body} = await request
-          .get 'http://couchdb:5984'
-          .accept 'json'
-        debug "CouchDB #{body.version} is ready."
-
-      after ->
-        await Promise.delay 500
-        await exec "docker kill #{docker.container}"
-
-      it 'should write a proper config file', ->
-        run = require '..'
-        config =
-          provisioning: "http://couchdb:5984/db_bear"
-          provisioning_admin: "http://couchdb:5984/db_bear"
-          host: 'example.net'
-
-        process.env.CONFIG = './config.json'
-        await fs.writeFileAsync process.env.CONFIG, (JSON.stringify config), encoding:'utf8'
-        debug 'wrote'
-
-        {cancel} = await run ->
-
-        buf = await fs.readFileAsync process.env.CONFIG, encoding:'utf8'
-        debug 'got', buf
-        data = JSON.parse buf
-        data.should.have.property 'provisioning', config.provisioning
-        data.should.have.property 'provisioning_admin', config.provisioning_admin
-        data.should.have.property 'host', config.host
-        data.should.have.property 'update_seq'
-
-        cancel?()
-
-        await fs.unlinkAsync process.env.CONFIG
+        # check
+        await sleep default_interval+2*seconds
+        close()
+        await completed
+        errored()
