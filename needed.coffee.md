@@ -39,4 +39,4 @@ However since calls can't be placed if the `account` field is empty, we don't ne
     module.exports = needed
     assert = require 'assert'
     pkg = require './package.json'
-    debug = (require 'debug') "#{pkg.name}:needed"
+    debug = (require 'debug') "#{pkg.name}:needed:trace"

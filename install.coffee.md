@@ -34,4 +34,4 @@ On first run, retrieve the last `update_seq` and save it.
 
     {URL} = require 'url'
     pkg = require './package.json'
-    debug = (require 'debug') "#{pkg.name}:install"
+    debug = (require 'debug') "#{pkg.name}:install:trace"
