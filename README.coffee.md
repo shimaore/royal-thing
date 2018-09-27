@@ -36,7 +36,7 @@ Restarting the process & saving the update sequence
 Only restart at intervals, not on every change.
 
       on_interval = ->
-        # debug 'on_interval'
+        debug 'on_interval'
         if restart_needed
           debug "Calling `restart`."
           await restart config
@@ -130,6 +130,7 @@ then use `needed` to decide whether it was modified in a way that requires a res
       .catch (error) ->
         debug_dev 'Failed (will not restart)', error
 
+      debug 'Started'
       {completed}
 
     pkg = require './package.json'
