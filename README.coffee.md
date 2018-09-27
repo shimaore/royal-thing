@@ -76,6 +76,8 @@ Force a restart if the database is too far away from our own sequence number.
 Monitoring changes
 ------------------
 
+      debug 'Monitoring changes'
+
       map_function = (emit) ->
         (doc) ->
           if doc._id.match /^number:\d+$/
@@ -130,7 +132,7 @@ then use `needed` to decide whether it was modified in a way that requires a res
       .catch (error) ->
         debug_dev 'Failed (will not restart)', error
 
-      debug 'Started'
+      debug 'Changes monitor started'
       {completed}
 
     pkg = require './package.json'
