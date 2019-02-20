@@ -16,7 +16,7 @@ A process that restarts the local registrant when needed
       debug 'Calling install()'
       {save} = await install host, db
         .catch (error) ->
-          debug_dev "install failed: #{error.stack ? error}"
+          debug.dev "install failed: #{error.stack ? error}"
           throw error
 
       debug 'Starting.'
@@ -53,7 +53,7 @@ Start the `on_interval` function.
         try
           await on_interval()
         catch error
-          debug_dev "Error: #{error}"
+          debug.dev "Error: #{error}"
       ), config.interval ? 61*second
 
       limit.observe ->
@@ -110,7 +110,7 @@ Finally, retrieve the previous revision of the document,
           old_doc = await db
             .get id, rev: old_rev
             .catch (error) ->
-              debug_dev "Failed to gather data about #{id}: #{error.stack ? error}"
+              debug.dev "Failed to gather data about #{id}: #{error.stack ? error}"
               null
 
 If none is specified, assumes that the document was just created (it's normal that there is no former revisions), or deleted (we weren't able to obtain `revs_info`).
@@ -125,20 +125,17 @@ then use `needed` to decide whether it was modified in a way that requires a res
 
         if needed host, old_doc, new_doc
           restart_needed = true
-          debug_csr "Triggering restart because of #{id}"
+          debug.csr "Triggering restart because of #{id}"
         new_seq = seq
 
         return
       .catch (error) ->
-        debug_dev 'Failed (will not restart)', error
+        debug.dev 'Failed (will not restart)', error
 
       debug 'Changes monitor started'
       {completed}
 
-    pkg = require './package.json'
-    debug     = (require 'debug') "#{pkg.name}:trace"
-    debug_csr = (require 'debug') "#{pkg.name}:csr"
-    debug_dev = (require 'debug') "#{pkg.name}:dev"
+    debug = (require 'tangible') 'royal-thing'
 
     second = 1000
 
