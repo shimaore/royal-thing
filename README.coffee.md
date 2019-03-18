@@ -83,7 +83,7 @@ Monitoring changes
           if doc._id.match /^number:\d+$/
             emit null
 
-      completed = db
+      db
       .query_changes map_function, since: our_seq, include_docs: true
       .until limit
       .observe ({id,seq,doc}) ->
@@ -129,11 +129,6 @@ then use `needed` to decide whether it was modified in a way that requires a res
         new_seq = seq
 
         return
-      .catch (error) ->
-        debug.dev 'Failed (will not restart)', error
-
-      debug 'Changes monitor started'
-      {completed}
 
     debug = (require 'tangible') 'royal-thing'
 
