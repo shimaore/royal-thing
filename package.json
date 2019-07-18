@@ -25,11 +25,11 @@
   "homepage": "https://gitlab.com/shimaore/royal-thing",
   "devDependencies": {
     "chai": "^4.2.0",
-    "coffeescript": "^2.3.2",
-    "mocha": "^6.0.2"
+    "coffeescript": "^2.4.1",
+    "mocha": "^6.1.4"
   },
   "dependencies": {
-    "most-couchdb": "^2.0.0",
-    "tangible": "^3.0.0"
+    "most-couchdb": "^3.3.3",
+    "tangible": "^3.1.0"
   }
 }
