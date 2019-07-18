@@ -83,10 +83,7 @@ Monitoring changes
           if doc._id.match /^number:\d+$/
             emit null
 
-      db
-      .query_changes map_function, since: our_seq, include_docs: true
-      .until limit
-      .observe ({id,seq,doc}) ->
+      handle_changes = ({id,seq,doc}) ->
         debug "Change on #{id} (seq #{seq})", doc
         new_doc = doc
 
@@ -129,6 +126,24 @@ then use `needed` to decide whether it was modified in a way that requires a res
         new_seq = seq
 
         return
+
+      completed = db
+        .query_changes map_function, since: our_seq, include_docs: true
+        .until limit
+        .observe ({id,seq,doc}) ->
+          try
+            await handle_changes {id,seq,doc}
+          catch error
+            debug.dev 'handle_changes', error
+          return
+
+This function will return as soon as processing can start.
+
+      debug 'Started.'
+
+It return an object containing a Promise that will complete when a complete run is finished.
+
+      return {completed}
 
     debug = (require 'tangible') 'royal-thing'
 

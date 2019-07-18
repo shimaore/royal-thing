@@ -31,9 +31,7 @@ The plan
 
       create = (db) ->
         await db.destroy().catch -> yes
-        await db.agent
-          .put db.uri
-          .accept 'json'
+        await db.create()
 
       record =
         _id:'number:33987654321'
@@ -74,7 +72,7 @@ The plan
         # uut
         error = null
         {limit,close} = stop()
-        completed = run ( (error) -> error = new Error "Should not have called: #{error}"), cfg, limit
+        {completed} = await run ( (error) -> error = new Error "Should not have called: #{error}"), cfg, limit
 
         # check
         await sleep default_interval+2*seconds
@@ -93,7 +91,7 @@ The plan
         # uut
         error = null
         {limit,close} = stop()
-        completed = run ( (error) -> error = new Error "Should not have called: #{error}"), cfg, limit
+        {completed} = await run ( (error) -> error = new Error "Should not have called: #{error}"), cfg, limit
 
         # trigger
         doc = await db.get record._id
@@ -115,7 +113,7 @@ The plan
         # uut
         {handler,errored} = restart()
         {limit,close} = stop()
-        completed = run handler, cfg, limit
+        {completed} = await run handler, cfg, limit
 
         # trigger
         await db.put record
@@ -137,7 +135,7 @@ The plan
         # uut
         {handler,errored} = restart()
         {limit,close} = stop()
-        completed = run handler, cfg, limit
+        {completed} = await run handler, cfg, limit
 
         # trigger
         doc = await db.get record._id
@@ -161,7 +159,7 @@ The plan
         # uut
         {handler,errored} = restart()
         {limit,close} = stop()
-        completed = run handler, cfg, limit
+        {completed} = await run handler, cfg, limit
 
         # trigger
         doc = await db.get record._id
@@ -188,7 +186,7 @@ The plan
         # uut
         {handler,errored} = restart()
         {limit,close} = stop()
-        completed = run handler, cfg, limit
+        {completed} = await run handler, cfg, limit
 
         # trigger
         doc = await db.get record._id
@@ -215,7 +213,7 @@ The plan
         # uut
         {handler,errored} = restart()
         {limit,close} = stop()
-        completed = run handler, cfg, limit
+        {completed} = await run handler, cfg, limit
 
         # trigger
         await sleep 500
@@ -248,7 +246,7 @@ The plan
         # uut
         {handler,errored} = restart()
         {limit,close} = stop()
-        completed = run handler, cfg, limit
+        {completed} = await run handler, cfg, limit
 
         # trigger
         await db.put record
@@ -273,7 +271,7 @@ The plan
         # uut
         {handler,errored} = restart()
         {limit,close} = stop()
-        completed = run handler, cfg, limit
+        {completed} = await run handler, cfg, limit
 
         # trigger
         doc =
